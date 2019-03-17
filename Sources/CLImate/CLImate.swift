@@ -92,18 +92,35 @@ extension CLI: ExpressibleByArrayLiteral {
     }
 }
 
+func <|> <A, B>(_ f: @escaping (A) throws -> B?, _ g: @escaping (A) throws -> B?) -> (A) throws -> B? {
+    return { a in
+        let b: B?
+        do {
+            b = try f(a)
+        } catch {
+            return try g(a)
+        }
+        return try b ?? g(a)
+    }
+}
+
 extension CLI {
 
     public static func <|> (lhs: CLI, rhs: CLI) -> CLI {
+        func usageForExample(_ cli: CLI) -> (A) throws -> String? {
+            return { example in
+                guard try cli.parser.print(example) != nil else {
+                    return nil
+                }
+                return cli.usage(example)
+            }
+        }
+
         return CLI<A>(
             parser: lhs.parser <|> rhs.parser,
             usage: { example in
-                return [
-                    lhs.usage(example),
-                    rhs.usage(example)
-                    ]
-                    .filter({ !$0.isEmpty })
-                    .joined(separator: "\n")
+                let usage = usageForExample(lhs) <|> usageForExample(rhs)
+                return (try? usage(example) ?? "") ?? ""
         },
             example: lhs.example + rhs.example
         )

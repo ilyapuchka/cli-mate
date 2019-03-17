@@ -184,6 +184,19 @@ public func command(
     )
 }
 
+public func command<A>(
+    name str: String,
+    description: String,
+    subCommands: CLI<A>
+) -> CLI<A> {
+    let cmd = command(name: str, description: description)
+    return CLI<A>(
+        parser: cmd.parser %> subCommands.parser,
+        usage: { str + " " + subCommands.usage($0) },
+        example: subCommands.example
+    )
+}
+
 public func arg<A>(
     long: String,
     short: String?,

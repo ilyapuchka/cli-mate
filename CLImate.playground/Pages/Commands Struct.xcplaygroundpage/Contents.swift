@@ -14,12 +14,23 @@ struct Commands: Equatable, CustomPlaygroundDisplayConvertible {
     enum Command {
         case hello(name: String, year: Int?)
         case print
+        case exit
     }
 
     let command: Command
 
     // Global options
     let verbose: Bool
+
+    init(command: Command, verbose: Bool) {
+        self.command = command
+        self.verbose = verbose
+    }
+
+    init(command: Command) {
+        self.command = command
+        self.verbose = false
+    }
 
     var playgroundDescription: Any {
         return "\(command) verbose: \(verbose)"
@@ -31,7 +42,7 @@ extension Commands.Command: Matchable {
         switch self {
         case let .hello(values as A) where self == constructor(values):
             return values
-        case .print:
+        case .print, .exit:
             guard let values = unit as? A, self == constructor(values) else {
                 return nil
             }
@@ -43,43 +54,62 @@ extension Commands.Command: Matchable {
 
 extension Commands: Matchable {
     func match<A>(_ constructor: (A) -> Commands) -> A? {
-        guard let values = (self.command, self.verbose) as? A, self == constructor(values) else { return nil }
-        return values
+        if let values = (self.command, self.verbose) as? A, self == constructor(values) {
+            return values
+        }
+        if let values = self.command as? A, self == constructor(values) {
+            return values
+        }
+        return nil
     }
 }
 
-let subCommands: CLI<Commands.Command> = [
-    iso(Commands.Command.hello)
-        <¢> command(
-            name: "hello",
-            description: "greeting"
-        )
-        <%> arg(
-            name: "name", short: "n", .string, example: "playground",
-            description: "a name"
-        )
-        <%> arg(
-            name: "year", short: "y", opt(.int), example: 2019,
-            description: "a year"
-    ),
-    iso(Commands.Command.print)
-        <¢> command(
-            name: "print",
-            description: "printing"
-    ),
-]
 
-let commands =
-    iso(Commands.init)
+let helloCommand = iso(Commands.Command.hello)
+    <¢> command(
+        name: "hello",
+        description: "greeting"
+    )
+    <%> arg(
+        name: "name", short: "n", .string, example: "playground",
+        description: "a name"
+    )
+    <%> arg(
+        name: "year", short: "y", opt(.int), example: 2019,
+        description: "a year"
+)
+
+let printCommand = iso(Commands.Command.print)
+    <¢> command(
+        name: "print",
+        description: "printing"
+)
+
+let exitCommand = iso(Commands.Command.exit)
+    <¢> command(
+        name: "exit",
+        description: "exit program"
+)
+
+let subCommands: CLI<Commands.Command> = [
+    helloCommand,
+    printCommand,
+].reduce(.empty, <|>)
+
+let commands: CLI<Commands> = [
+    iso(Commands.init(command:verbose:))
         <¢> command(
             name: "run",
-            description: "runs a command"
+            description: "runs a command",
+            subCommands: subCommands
         )
-        <%> subCommands
         <%> option(
             name: "verbose", default: false,
             description: "be verbose"
-)
+    ),
+    iso(Commands.init(command:))
+        <¢> exitCommand
+].reduce(.empty, <|>)
 
 
 do {

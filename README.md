@@ -14,7 +14,7 @@ let commands: CLI<Commands> = [
             description: "greeting command"
         )
         <%> arg(
-            name: "name", short: "n", .string, example: "world",
+            name: "name", short: "n", example: "world",
             description: "a name"
         )
         <%> option(

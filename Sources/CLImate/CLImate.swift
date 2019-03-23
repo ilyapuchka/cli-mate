@@ -234,6 +234,21 @@ public func arg<A>(
     )
 }
 
+public func arg<A: LosslessStringConvertible>(
+    name long: String,
+    short: String? = nil,
+    example: A,
+description: String
+) -> CLI<A> {
+    let f: PartialIso<String, A> = .losslessStringConvertible
+    let parser = arg(long: long, short: short, f)
+    return CLI<A>(
+        parser: parser,
+        usage: { argHelp(parser: parser, description: description, example: $0) },
+        example: [example]
+    )
+}
+
 public func arg<A>(
     long: String,
     short: String?,
@@ -266,6 +281,21 @@ public func arg<A>(
     description: String
 ) -> CLI<A?> {
     let parser = arg(long: long, short: short, f)
+    return CLI<A?>(
+        parser: parser,
+        usage: { argHelp(parser: parser, description: description, example: $0) },
+        example: [example]
+    )
+}
+
+public func arg<A: LosslessStringConvertible>(
+    name long: String,
+    short: String? = nil,
+    example: A,
+    description: String
+) -> CLI<A?> {
+    let f: PartialIso<String, A> = .losslessStringConvertible
+    let parser = arg(long: long, short: short, opt(f))
     return CLI<A?>(
         parser: parser,
         usage: { argHelp(parser: parser, description: description, example: $0) },

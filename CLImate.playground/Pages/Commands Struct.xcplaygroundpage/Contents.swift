@@ -71,11 +71,11 @@ let helloCommand = iso(Commands.Command.hello)
         description: "greeting"
     )
     <%> arg(
-        name: "name", short: "n", .string, example: "playground",
+        name: "name", short: "n", example: "playground",
         description: "a name"
     )
     <%> arg(
-        name: "year", short: "y", opt(.int), example: 2019,
+        name: "year", short: "y", example: 2019,
         description: "a year"
 )
 

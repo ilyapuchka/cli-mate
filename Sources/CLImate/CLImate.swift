@@ -55,10 +55,6 @@ public struct CLI<A>: FormatType {
         return .init(parser: .empty, usage: const(""), example: [])
     }
 
-    public func match(_ template: CommandLineArguments) throws -> A? {
-        return try self.parser.parse(template)?.match
-    }
-
     public func match(_ args: [String] = CommandLine.arguments) throws -> A? {
         return try self.match(CommandLineArguments(parts: args))
     }

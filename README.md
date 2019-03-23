@@ -47,3 +47,15 @@ Example:
     hello --name world --verbose
 */
 ```
+
+## Installation
+
+```swift
+import PackageDescription
+
+let package = Package(
+    dependencies: [
+        .package(url: "https://github.com/ilyapuchka/cli-mate.git", .branch("master")),
+    ]
+)
+```

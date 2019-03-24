@@ -70,11 +70,11 @@ let helloCommand = iso(Commands.Command.hello)
         name: "hello",
         description: "greeting"
     )
-    <%> arg(
+    -- arg(
         name: "name", short: "n", example: "playground",
         description: "a name"
     )
-    <%> arg(
+    -- arg(
         name: "year", short: "y", example: 2019,
         description: "a year"
 )
@@ -103,7 +103,7 @@ let commands: CLI<Commands> = [
             description: "runs a command",
             subCommands: subCommands
         )
-        <%> option(
+        -- option(
             name: "verbose", default: false,
             description: "be verbose"
     ),

@@ -353,3 +353,24 @@ public func option(
         example: [true]
     )
 }
+
+
+public func <¢> <U: Matchable>(_ f: U, cli: CLI<Prelude.Unit>) -> CLI<U> {
+    return iso(f) <¢> cli
+}
+
+public func <¢> <A, U: Matchable>(_ f: @escaping (A) -> U, cli: CLI<A>) -> CLI<U> {
+    return iso(f) <¢> cli
+}
+
+public func <¢><A, B, U: Matchable>(_ f: @escaping (A, B) -> U, cli: CLI<(A, B)>) -> CLI<U> {
+    return iso(f) <¢> cli
+}
+
+public func <¢><A, B, C, U: Matchable>(_ f: @escaping (A, B, C) -> U, cli: CLI<(A, (B, C))>) -> CLI<U> {
+    return iso(f) <¢> cli
+}
+
+public func <¢><A, B, C, D, U: Matchable>(_ f: @escaping (A, B, C, D) -> U, cli: CLI<(A, (B, (C, D)))>) -> CLI<U> {
+    return iso(f) <¢> cli
+}

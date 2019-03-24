@@ -29,7 +29,7 @@ extension Commands: Matchable {
 }
 
 let commands: CLI<Commands> = [
-    iso(Commands.hello)
+    Commands.hello
         <¢> command(
             name: "hello",
             description: "greeting"
@@ -46,7 +46,7 @@ let commands: CLI<Commands> = [
             name: "verbose", default: false,
             description: "be verbose"
     ),
-    iso(Commands.print)
+    Commands.print
         <¢> command(
             name: "print",
             description: "printing"

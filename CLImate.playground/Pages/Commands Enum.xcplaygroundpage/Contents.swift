@@ -34,15 +34,15 @@ let commands: CLI<Commands> = [
             name: "hello",
             description: "greeting"
         )
-        <%> arg(
+        -- arg(
             name: "name", short: "n", example: "playground",
             description: "a name"
         )
-        <%> arg(
+        -- arg(
             name: "year", short: "y", example: 2019,
             description: "a year"
         )
-        <%> option(
+        -- option(
             name: "verbose", default: false,
             description: "be verbose"
     ),
@@ -51,7 +51,7 @@ let commands: CLI<Commands> = [
             name: "print",
             description: "printing"
         )
-        <%> option(
+        -- option(
             name: "verbose", short: "v", default: false,
             description: "be verbose"
     )

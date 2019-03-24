@@ -8,16 +8,16 @@ enum Commands {
 }
 
 let commands: CLI<Commands> = [
-    iso(Commands.hello)
+    Commands.hello
         <¢> command(
             name: "hello",
             description: "greeting command"
         )
-        <%> arg(
+        -- arg(
             name: "name", short: "n", example: "world",
             description: "a name"
         )
-        <%> option(
+        -- option(
             name: "verbose", default: false,
             description: "be verbose"
         ),

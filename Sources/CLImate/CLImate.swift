@@ -91,6 +91,8 @@ func <|> <A, B>(_ f: @escaping (A) throws -> B?, _ g: @escaping (A) throws -> B?
     }
 }
 
+infix operator --: infixr4
+
 extension CLI {
 
     public static func <|> (lhs: CLI, rhs: CLI) -> CLI {
@@ -122,7 +124,7 @@ extension CLI {
     }
 
     /// Processes with the left and right side Formats, and if they succeed returns the pair of their results.
-    public static func <%> <B> (lhs: CLI, rhs: CLI<B>) -> CLI<(A, B)> {
+    public static func -- <B> (lhs: CLI, rhs: CLI<B>) -> CLI<(A, B)> {
         return CLI<(A, B)>(
             parser: lhs.parser <%> rhs.parser,
             usage: { lhs.usage($0.0) + "\n" + rhs.usage($0.1) },
@@ -137,7 +139,7 @@ extension CLI {
     }
 
     /// Processes with the left and right side Formats, discarding the result of the left side.
-    public static func <%> (lhs: CLI<Prelude.Unit>, rhs: CLI) -> CLI {
+    public static func -- (lhs: CLI<Prelude.Unit>, rhs: CLI) -> CLI {
         return CLI<A>(
             parser: lhs.parser %> rhs.parser,
             usage: { lhs.usage(unit) + "\n" + rhs.usage($0) },

@@ -26,7 +26,7 @@ let commands: CLI<Commands> = [
 
 let args = ["hello", "--name", "world", "--verbose"]
 
-commands.run(args) { cmd in
+try commands.run(args) { cmd in
     print(cmd)
     
     /**

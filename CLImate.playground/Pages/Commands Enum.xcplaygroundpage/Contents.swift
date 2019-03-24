@@ -18,11 +18,12 @@ enum Commands {
 extension Commands: Matchable {
     func match<A>(_ constructor: (A) -> Commands) -> A? {
         switch self {
-        case let .hello(values as A) where self == constructor(values):
-            return values
-        case let .print(values as A) where self == constructor(values):
-            return values
-        default: return nil
+        case let .hello(values):
+            guard let a = values as? A, self == constructor(a) else { return nil }
+            return a
+        case let .print(values):
+            guard let a = values as? A, self == constructor(a) else { return nil }
+            return a
         }
     }
 }
@@ -51,7 +52,7 @@ let commands: CLI<Commands> = [
             description: "printing"
         )
         <%> option(
-            name: "verbose", default: false,
+            name: "verbose", short: "v", default: false,
             description: "be verbose"
     )
     ]

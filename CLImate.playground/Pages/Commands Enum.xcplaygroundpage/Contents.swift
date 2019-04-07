@@ -71,6 +71,8 @@ do {
     try commands.run(args) { (cmd) in
         print(cmd)
     }
+
+    try commands.run(["hello", "--help"]) { _ in }
 } catch {
     print(error)
 }

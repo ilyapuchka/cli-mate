@@ -97,17 +97,16 @@ let subCommands: CLI<Commands.Command> = [
 ].reduce(.empty, <|>)
 
 let commands: CLI<Commands> = [
-    iso(Commands.init(command:verbose:))
+    iso(Commands.init)
         <¢> command(
             name: "run",
-            description: "runs a command",
             subCommands: subCommands
         )
         -- option(
             name: "verbose", default: false,
             description: "be verbose"
     ),
-    iso(Commands.init(command:))
+    iso(Commands.init)
         <¢> exitCommand
 ].reduce(.empty, <|>)
 
@@ -129,6 +128,8 @@ do {
     try commands.run(args) { (cmd) in
         print(cmd)
     }
+
+    try commands.run(["run", "--help"]) { _ in }
 } catch {
     print(error)
 }

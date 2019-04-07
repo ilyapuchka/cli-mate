@@ -33,8 +33,13 @@ try commands.run(args) { cmd in
     hello(name: "world", verbose: true)
     */
 }
+```
 
-print(commands.help())
+Each command will automatically support `--help` option to print its usage instructions. 
+Providing just `--help` option without any command name will print instructions for all defined commands.  
+
+```swift
+try commands.run(["hello", "--help"])
 
 /**
 Usage:

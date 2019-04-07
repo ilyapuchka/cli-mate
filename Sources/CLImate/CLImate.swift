@@ -2,11 +2,15 @@ import Foundation
 import CommonParsers
 import Prelude
 
-public struct CommandLineArguments {
+public struct CommandLineArguments: ExpressibleByArrayLiteral, Equatable {
     public private(set) var parts: [String]
 
     public init(parts: [String] = CommandLine.arguments) {
         self.parts = parts
+    }
+
+    public init(arrayLiteral elements: String...) {
+        self.init(parts: elements)
     }
 }
 
@@ -59,17 +63,23 @@ public struct CLI<A>: FormatType {
         return try self.match(CommandLineArguments(parts: args))
     }
 
-    public func help() -> String {
+    public func help(_ args: [String] = []) -> String {
         return "Usage:\n\n" + example
             .compactMap {
-                guard let example = try? self.parser.print($0), let ex = example?.render() else { return nil }
-                return "\(usage($0))\n\nExample:\n  \(ex)"
+                guard let example = try? self.parser.print($0), let ex = example else { return nil }
+                guard args.isEmpty || args.first(where: { ex.parts.contains($0) == false }) == nil else { return nil }
+
+                return "\(usage($0))\n\nExample:\n  \(ex.render())"
             }
             .joined(separator: "\n\n")
     }
 
     public func run(_ args: [String] = CommandLine.arguments, _ perform: (A) -> Void) throws -> Void {
-        try match(args).map(perform)
+        if args.last == "--help" {
+            Swift.print(help(Array(args.dropLast())))
+        } else if let matched = try match(args) {
+            perform(matched)
+        }
     }
 }
 
@@ -116,25 +126,26 @@ extension CLI {
     }
 
     public static func <¢> <B> (lhs: PartialIso<A, B>, rhs: CLI) -> CLI<B> {
+        let example = rhs.example.compactMap({ (try? lhs.apply($0)) ?? nil })
         return CLI<B>(
             parser: lhs <¢> rhs.parser,
             usage: { ((try? lhs.unapply($0))?.map(rhs.usage)) ?? "" },
-            example: rhs.example.compactMap({ (try? lhs.apply($0)) ?? nil })
+            example: example
         )
     }
 
     /// Processes with the left and right side Formats, and if they succeed returns the pair of their results.
     public static func -- <B> (lhs: CLI, rhs: CLI<B>) -> CLI<(A, B)> {
+        let example = lhs.example.flatMap({ (lhs) in
+            rhs.example.map({ (rhs) in
+                (lhs, rhs)
+            })
+        })
+
         return CLI<(A, B)>(
             parser: lhs.parser <%> rhs.parser,
             usage: { lhs.usage($0.0) + "\n" + rhs.usage($0.1) },
-            example: {
-                lhs.example.flatMap({ (lhs) in
-                    rhs.example.map({ (rhs) in
-                        (lhs, rhs)
-                    })
-                })
-        }()
+            example: example
         )
     }
 
@@ -175,13 +186,12 @@ public func command(
 
 public func command<A>(
     name str: String,
-    description: String,
     subCommands: CLI<A>
 ) -> CLI<A> {
-    let cmd = command(name: str, description: description)
+    let cmd = command(name: str, description: "")
     return CLI<A>(
         parser: cmd.parser %> subCommands.parser,
-        usage: { str + " " + subCommands.usage($0) },
+        usage: { "\(str) \(subCommands.usage($0))" },
         example: subCommands.example
     )
 }
@@ -199,8 +209,8 @@ private func argUsage(long: String, short: String?) -> String {
 private func argHelp<A>(
     long: String,
     short: String?,
-    _ f: PartialIso<String, A>,
-    description: String
+    description: String,
+    _ f: PartialIso<String, A>
 ) -> (A) -> String {
     return { example in
         guard let _ = try? f.unapply(example) else { return "" }
@@ -239,7 +249,7 @@ public func arg<A>(
 ) -> CLI<A> {
     return CLI<A>(
         parser: arg(long: long, short: short, f),
-        usage: argHelp(long: long, short: short, f, description: description),
+        usage: argHelp(long: long, short: short, description: description, f),
         example: [example]
     )
 }
@@ -252,7 +262,7 @@ public func arg<A: LosslessStringConvertible>(
 ) -> CLI<A> {
     return CLI<A>(
         parser: arg(long: long, short: short, .losslessStringConvertible),
-        usage: argHelp(long: long, short: short, .losslessStringConvertible, description: description),
+        usage: argHelp(long: long, short: short, description: description, .losslessStringConvertible),
         example: [example]
     )
 }
@@ -260,8 +270,8 @@ public func arg<A: LosslessStringConvertible>(
 private func argHelp<A>(
     long: String,
     short: String?,
-    _ f: PartialIso<String?, A?>,
-    description: String
+    description: String,
+    _ f: PartialIso<String?, A?>
 ) -> (A?) -> String {
     return { example in
         guard let example = example, let _ = try? f.unapply(example) else { return "" }
@@ -301,7 +311,7 @@ public func arg<A>(
 ) -> CLI<A?> {
     return CLI<A?>(
         parser: arg(long: long, short: short, f),
-        usage: argHelp(long: long, short: short, f, description: description),
+        usage: argHelp(long: long, short: short, description: description, f),
         example: [example]
     )
 }
@@ -314,7 +324,7 @@ public func arg<A: LosslessStringConvertible>(
 ) -> CLI<A?> {
     return CLI<A?>(
         parser: arg(long: long, short: short, opt(.losslessStringConvertible)),
-        usage: argHelp(long: long, short: short, opt(.losslessStringConvertible), description: description),
+        usage: argHelp(long: long, short: short, description: description, opt(.losslessStringConvertible)),
         example: [example]
     )
 }
@@ -355,7 +365,6 @@ public func option(
         example: [true]
     )
 }
-
 
 public func <¢> <U: Matchable>(_ f: U, cli: CLI<Prelude.Unit>) -> CLI<U> {
     return iso(f) <¢> cli

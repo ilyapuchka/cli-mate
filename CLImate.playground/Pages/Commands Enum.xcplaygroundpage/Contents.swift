@@ -13,6 +13,7 @@ let args = [
 enum Commands {
     case hello(name: String, year: Int?, verbose: Bool)
     case print(verbose: Bool)
+    case fastlane(lane: String, options: [String])
 }
 
 extension Commands: Matchable {
@@ -22,6 +23,9 @@ extension Commands: Matchable {
             guard let a = values as? A, self == constructor(a) else { return nil }
             return a
         case let .print(values):
+            guard let a = values as? A, self == constructor(a) else { return nil }
+            return a
+        case let .fastlane(values):
             guard let a = values as? A, self == constructor(a) else { return nil }
             return a
         }
@@ -54,8 +58,21 @@ let commands: CLI<Commands> = [
         -- option(
             name: "verbose", short: "v", default: false,
             description: "be verbose"
-    )
-    ]
+    ),
+    Commands.fastlane
+        <¢> command(
+            name: "/fastlane",
+            description: "run lane"
+        )
+        -- arg(
+            name: nil, .string, example: "test_babylon",
+            description: "name of the lane"
+        )
+        -- varArg(
+            example: ["branch:develop"],
+            description: "lane options"
+        )
+]
 
 do {
     print(commands.help())
@@ -72,7 +89,12 @@ do {
         print(cmd)
     }
 
-    try commands.run(["hello", "--help"]) { _ in }
+    try commands.run(["help", "--help"]) { _ in }
+
+    try commands.run(["/fastlane", "test", "branch:develop", "device:iPhone5"]) { (cmd) in
+        print(cmd)
+    }
+
 } catch {
     print(error)
 }

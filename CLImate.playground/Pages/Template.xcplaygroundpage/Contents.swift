@@ -10,7 +10,7 @@ let template = CLITemplate(
     longArg: { "\($0):" },
     shortArg: { "\($0):" },
     argHelp: { (long, short, type, description) -> String in
-        return "  \(long)\(short.map { "(\($0))" } ?? ""): \(description) (\(type))"
+        return "  \(long ?? "")\(short.map { "(\($0))" } ?? ""): \(description) (\(type))"
     },
     longOption: { $0 },
     shortOption: { $0 },

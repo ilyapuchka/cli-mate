@@ -64,14 +64,19 @@ public struct CLI<A>: FormatType {
     }
 
     public func help(_ args: [String] = []) -> String {
-        return "Usage:\n\n" + example
+        let usages: [String] = example
             .compactMap {
                 guard let example = try? self.parser.print($0), let ex = example else { return nil }
                 guard args.isEmpty || args.first(where: { ex.parts.contains($0) == false }) == nil else { return nil }
 
                 return "\(usage($0))\n\nExample:\n  \(ex.render())"
-            }
-            .joined(separator: "\n\n")
+        }
+
+        if usages.isEmpty {
+            return ""
+        } else {
+            return "Usage:\n\n" + usages.joined(separator: "\n\n")
+        }
     }
 
     public func run(_ args: [String] = CommandLine.arguments, _ perform: (A) -> Void) throws -> Void {

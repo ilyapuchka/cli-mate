@@ -176,17 +176,19 @@ extension CLI {
     }
 }
 
-public func command(_ str: String) -> Parser<CommandLineArguments, Prelude.Unit> {
+public func command(_ str: String?) -> Parser<CommandLineArguments, Prelude.Unit> {
     return Parser<CommandLineArguments, Prelude.Unit>.init(
         parse: { format -> (rest: CommandLineArguments, match: Prelude.Unit)? in
+            guard let str = str else { return (format, unit) }
+
             return format.parts.head().flatMap { (p, ps) in
                 return (p == str)
                     ? (CommandLineArguments(parts: Array(ps)), unit)
                     : nil
             }
     },
-        print: { _ in CommandLineArguments(parts: [str]) },
-        template: { _ in CommandLineArguments(parts: [str]) }
+        print: { _ in CommandLineArguments(parts: str.map { [$0] } ?? []) },
+        template: { _ in CommandLineArguments(parts: str.map { [$0] } ?? []) }
     )
 }
 
@@ -209,6 +211,21 @@ public func command<A>(
     return CLI<A>(
         parser: cmd.parser %> subCommands.parser,
         usage: { "\(str) \(subCommands.usage($0))" },
+        example: subCommands.example
+    )
+}
+
+public func commands<A>(
+    _ subCommands: CLI<A>
+) -> CLI<A> {
+    let cmd = CLI<Prelude.Unit>(
+        parser: command(nil),
+        usage: const(""),
+        example: [unit]
+    )
+    return CLI<A>(
+        parser: cmd.parser %> subCommands.parser,
+        usage: subCommands.usage,
         example: subCommands.example
     )
 }

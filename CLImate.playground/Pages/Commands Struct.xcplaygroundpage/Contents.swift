@@ -94,7 +94,7 @@ let exitCommand = iso(Commands.Command.exit)
 let subCommands: CLI<Commands.Command> = [
     helloCommand,
     printCommand,
-].reduce(.empty, <|>)
+]
 
 let commands: CLI<Commands> = [
     iso(Commands.init)
@@ -108,7 +108,7 @@ let commands: CLI<Commands> = [
     ),
     iso(Commands.init)
         <¢> exitCommand
-].reduce(.empty, <|>)
+]
 
 
 do {

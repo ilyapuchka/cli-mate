@@ -65,7 +65,7 @@ let commands: CLI<Commands> = [
             description: "run lane"
         )
         -- arg(
-            name: nil, .string, example: "test_babylon",
+            example: "test_babylon",
             description: "name of the lane"
         )
         -- varArg(

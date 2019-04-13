@@ -38,6 +38,7 @@ public struct CLI<A>: FormatType {
     public let usage: (A) -> String
     public let example: [A]
     public let parser: Parser<CommandLineArguments, A>
+    var template: CLITemplate = cliTemplate
 
     public init(_ parser: Parser<CommandLineArguments, A>) {
         self.parser = parser
@@ -55,6 +56,15 @@ public struct CLI<A>: FormatType {
         self.example = example
     }
 
+    init(
+        parser: (CLITemplate) -> Parser<CommandLineArguments, A>,
+        usage: (CLITemplate) -> (A) -> String,
+        example: [A],
+        template: CLITemplate
+    ) {
+        self.init(parser: parser(template), usage: usage(template), example: example)
+    }
+
     public static var empty: CLI {
         return .init(parser: .empty, usage: const(""), example: [])
     }
@@ -69,18 +79,20 @@ public struct CLI<A>: FormatType {
                 guard let example = try? self.parser.print($0), let ex = example else { return nil }
                 guard args.isEmpty || args.first(where: { ex.parts.contains($0) == false }) == nil else { return nil }
 
-                return "\(usage($0))\n\nExample:\n  \(ex.render())"
+                return template.commandUsage(usage($0), ex.render())
         }
 
         if usages.isEmpty {
             return ""
         } else {
-            return "Usage:\n\n" + usages.joined(separator: "\n\n")
+            return template.cliUsage(usages.joined(separator: "\n\n"))
         }
     }
 
     public func run(_ args: [String] = CommandLine.arguments, _ perform: (A) -> Void) throws -> Void {
-        if args.last == "--help" {
+        let isHelp = equalsOptionName(long: "help", short: nil)(template)
+
+        if args.last.flatMap(isHelp) == true {
             Swift.print(help(Array(args.dropLast())))
         } else if let matched = try match(args) {
             perform(matched)
@@ -201,14 +213,94 @@ public func command<A>(
     )
 }
 
-private func equalsArgName(long: String, short: String?) -> (String) -> Bool {
-    return { name in
-        name == "--\(long)" || (short.map { name == "-\($0)" } ?? false)
+public struct CLITemplate {
+    public static let defaultLongArg: Arg = { "--\($0)" }
+    public static let defaultShortArg: Arg = { "-\($0)" }
+    public static let defaultArgHelp: ArgHelp = { long, short, type, description in
+        "  \(defaultLongArg(long))\(short.map { " (\(defaultShortArg($0)))" } ?? "") \(type): \(description)"
+    }
+    public static let defaultOptionHelp: OptionHelp = { long, short, `default`, description in
+        "  --\(long)\(short.map { " (-\($0))" } ?? ""): \(description) (default: \(`default`))"
+    }
+    public static let defaultCommandUsage: CommandUsage = { usage, example in
+        "\(usage)\n\nExample:\n  \(example)"
+    }
+    public static let defaultCLIUsage: (_ usage: String) -> String = { usage in
+        "Usage:\n\n\(usage)"
+    }
+
+    public typealias Arg = (String) -> String
+    public typealias ArgHelp = (
+        _ long: String,
+        _ short: String?,
+        _ type: String,
+        _ description: String
+    ) -> String
+
+    public typealias Option = (String) -> String
+    public typealias OptionHelp = (
+        _ long: String,
+        _ short: String?,
+        _ `default`: String,
+        _ description: String
+    ) -> String
+
+    public typealias CommandUsage = (
+        _ usage: String,
+        _ example: String
+    ) -> String
+
+    let longArg: Arg
+    let shortArg: Arg
+    let argHelp: ArgHelp
+    let longOption: Option
+    let shortOption: Option
+    let optionHelp: OptionHelp
+    let commandUsage: (String, String) -> String
+    let cliUsage: (String) -> String
+
+    public init(
+        longArg: @escaping Arg = CLITemplate.defaultLongArg,
+        shortArg: @escaping Arg = CLITemplate.defaultShortArg,
+        argHelp: @escaping ArgHelp = CLITemplate.defaultArgHelp,
+        longOption: @escaping Option = CLITemplate.defaultLongArg,
+        shortOption: @escaping Option = CLITemplate.defaultShortArg,
+        optionHelp: @escaping OptionHelp = CLITemplate.defaultOptionHelp,
+        commandUsage: @escaping CommandUsage = CLITemplate.defaultCommandUsage,
+        cliUsage: @escaping (String) -> String = CLITemplate.defaultCLIUsage
+    ) {
+        self.longArg = longArg
+        self.shortArg = shortArg
+        self.argHelp = argHelp
+        self.longOption = longOption
+        self.shortOption = shortOption
+        self.optionHelp = optionHelp
+        self.commandUsage = commandUsage
+        self.cliUsage = cliUsage
     }
 }
 
-private func argUsage(long: String, short: String?) -> String {
-    return "--\(long)\(short.map { " (-\($0))" } ?? "")"
+private var cliTemplate: CLITemplate = CLITemplate()
+
+extension CLI {
+    public static func with(template: CLITemplate, _ define: () -> CLI) -> CLI {
+        cliTemplate = template
+        defer { cliTemplate = CLITemplate() }
+        var cli = define()
+        cli.template = template
+        return cli
+    }
+}
+
+private func equalsArgName(
+    long: String,
+    short: String?
+) -> (CLITemplate) -> (String) -> Bool {
+    return { template in
+        return { name in
+            name == template.longArg(long) || (short.map { name == template.shortArg($0) } ?? false)
+        }
+    }
 }
 
 private func argHelp<A>(
@@ -216,33 +308,76 @@ private func argHelp<A>(
     short: String?,
     description: String,
     _ f: PartialIso<String, A>
-) -> (A) -> String {
-    return { example in
-        guard let _ = try? f.unapply(example) else { return "" }
-        return "  \(argUsage(long: long, short: short)) \(type(of: example)): \(description)"
+) -> (CLITemplate) -> (A) -> String {
+    return { template in
+        return { example in
+            guard let _ = try? f.unapply(example) else { return "" }
+            return template.argHelp(long, short, "\(A.self)", description)
+        }
     }
 }
 
-public func arg<A>(
+private func argHelp<A>(
+    long: String,
+    short: String?,
+    description: String,
+    _ f: PartialIso<String?, A?>
+) -> (CLITemplate) -> (A?) -> String {
+    return { template in
+        return { example in
+            guard let example = example, let _ = try? f.unapply(example) else { return "" }
+            return template.argHelp(long, short, "\(A.self)", description)
+        }
+    }
+}
+
+private func equalsOptionName(
+    long: String,
+    short: String?
+) -> (CLITemplate) -> (String) -> Bool {
+    return { template in
+        return { name in
+            name == template.longOption(long) || (short.map { name == template.shortOption($0) } ?? false)
+        }
+    }
+}
+
+private func optionHelp(
+    name long: String,
+    short: String?,
+    default: Bool,
+    description: String
+) -> (CLITemplate) -> (Bool) -> String {
+    return { template in
+        return {
+            guard $0 else { return "" }
+            return template.optionHelp(long, short, "\(`default`)", description)
+        }
+    }
+}
+
+func arg<A>(
     long: String,
     short: String?,
     _ f: PartialIso<String, A>
-) -> Parser<CommandLineArguments, A> {
-    return Parser<CommandLineArguments, A>(
-        parse: { format in
-            guard
-                let p = format.parts.index(where: equalsArgName(long: long, short: short)),
-                p < format.parts.endIndex,
-                let v = try f.apply(format.parts[format.parts.index(after: p)])
-                else { return nil }
-            return (format, v)
-    },
-        print: { a in
-            try f.unapply(a).flatMap { s in CommandLineArguments(parts: ["--\(long)", s]) }
-    },
-        template: { a in
-            try f.unapply(a).flatMap { s in CommandLineArguments(parts: ["--\(long)", "\(type(of: a))"]) }
-    })
+) -> (CLITemplate) -> Parser<CommandLineArguments, A> {
+    return { template in
+        return Parser<CommandLineArguments, A>(
+            parse: { format in
+                guard
+                    let p = format.parts.index(where: equalsArgName(long: long, short: short)(template)),
+                    p < format.parts.endIndex,
+                    let v = try f.apply(format.parts[format.parts.index(after: p)])
+                    else { return nil }
+                return (format, v)
+        },
+            print: { a in
+                try f.unapply(a).flatMap { s in CommandLineArguments(parts: ["\(template.longArg(long))", s]) }
+        },
+            template: { a in
+                try f.unapply(a).flatMap { s in CommandLineArguments(parts: ["\(template.longArg(long))", "\(type(of: a))"]) }
+        })
+    }
 }
 
 public func arg<A>(
@@ -253,9 +388,19 @@ public func arg<A>(
     description: String
 ) -> CLI<A> {
     return CLI<A>(
-        parser: arg(long: long, short: short, f),
-        usage: argHelp(long: long, short: short, description: description, f),
-        example: [example]
+        parser: arg(
+            long: long,
+            short: short,
+            f
+        ),
+        usage: argHelp(
+            long: long,
+            short: short,
+            description: description,
+            f
+        ),
+        example: [example],
+        template: cliTemplate
     )
 }
 
@@ -266,45 +411,46 @@ public func arg<A: LosslessStringConvertible>(
     description: String
 ) -> CLI<A> {
     return CLI<A>(
-        parser: arg(long: long, short: short, .losslessStringConvertible),
-        usage: argHelp(long: long, short: short, description: description, .losslessStringConvertible),
-        example: [example]
+        parser: arg(
+            long: long,
+            short: short,
+            .losslessStringConvertible
+        ),
+        usage: argHelp(
+            long: long,
+            short: short,
+            description: description,
+            .losslessStringConvertible
+        ),
+        example: [example],
+        template: cliTemplate
     )
 }
 
-private func argHelp<A>(
+func arg<A>(
     long: String,
     short: String?,
-    description: String,
     _ f: PartialIso<String?, A?>
-) -> (A?) -> String {
-    return { example in
-        guard let example = example, let _ = try? f.unapply(example) else { return "" }
-        return "  \(argUsage(long: long, short: short)) \(type(of: example)): \(description)"
+) -> (CLITemplate) -> Parser<CommandLineArguments, A?> {
+    return { template in
+        return Parser<CommandLineArguments, A?>(
+            parse: { format in
+                guard
+                    let p = format.parts.index(where: equalsArgName(long: long, short: short)(template)),
+                    p < format.parts.endIndex,
+                    let v = try f.apply(format.parts[format.parts.index(after: p)])
+                    else { return (format, nil) }
+                return (format, v)
+        },
+            print: { a in
+                try f.unapply(a).flatMap { s in CommandLineArguments(parts: ["\(template.longArg(long))", s ?? ""]) }
+                    ?? .empty
+        },
+            template: { a in
+                try f.unapply(a).flatMap { s in CommandLineArguments(parts: ["\(template.longArg(long))", "\(type(of: a))"]) }
+                    ?? .empty
+        })
     }
-}
-public func arg<A>(
-    long: String,
-    short: String?,
-    _ f: PartialIso<String?, A?>
-) -> Parser<CommandLineArguments, A?> {
-    return Parser<CommandLineArguments, A?>(
-        parse: { format in
-            guard
-                let p = format.parts.index(where: equalsArgName(long: long, short: short)),
-                p < format.parts.endIndex,
-                let v = try f.apply(format.parts[format.parts.index(after: p)])
-                else { return (format, nil) }
-            return (format, v)
-    },
-        print: { a in
-            try f.unapply(a).flatMap { s in CommandLineArguments(parts: ["--\(long)", s ?? ""]) }
-                ?? .empty
-    },
-        template: { a in
-            try f.unapply(a).flatMap { s in CommandLineArguments(parts: ["--\(long)", "\(type(of: a))"]) }
-                ?? .empty
-    })
 }
 
 public func arg<A>(
@@ -314,10 +460,21 @@ public func arg<A>(
     example: A,
     description: String
 ) -> CLI<A?> {
+    let template = cliTemplate
     return CLI<A?>(
-        parser: arg(long: long, short: short, f),
-        usage: argHelp(long: long, short: short, description: description, f),
-        example: [example]
+        parser: arg(
+            long: long,
+            short: short,
+            f
+        ),
+        usage: argHelp(
+            long: long,
+            short: short,
+            description: description,
+            f
+        ),
+        example: [example],
+        template: template
     )
 }
 
@@ -328,34 +485,37 @@ public func arg<A: LosslessStringConvertible>(
     description: String
 ) -> CLI<A?> {
     return CLI<A?>(
-        parser: arg(long: long, short: short, opt(.losslessStringConvertible)),
-        usage: argHelp(long: long, short: short, description: description, opt(.losslessStringConvertible)),
-        example: [example]
+        parser: arg(
+            long: long,
+            short: short,
+            opt(.losslessStringConvertible)
+        ),
+        usage: argHelp(
+            long: long,
+            short: short,
+            description: description,
+            opt(.losslessStringConvertible)
+        ),
+        example: [example],
+        template: cliTemplate
     )
 }
 
-private func optionHelp(
-    name long: String,
-    short: String? = nil,
-    default: Bool = false,
-    description: String
-) -> (Bool) -> String {
-    return { $0 ? "  \(argUsage(long: long, short: short)) (default: \(`default`)): \(description)" : "" }
-}
-
-public func option(
+func option(
     long: String,
     short: String?,
     default: Bool
-) -> Parser<CommandLineArguments, Bool> {
-    return Parser<CommandLineArguments, Bool>(
-        parse: { format in
-            let v = format.parts.contains(where: equalsArgName(long: long, short: short))
-            return (format, v || `default`)
-    },
-        print: { $0 ? CommandLineArguments(parts: ["--\(long)"]) : .empty },
-        template: { $0 ? CommandLineArguments(parts: ["--\(long)"]) : .empty }
-    )
+) -> (CLITemplate) -> Parser<CommandLineArguments, Bool> {
+    return { template in
+        return Parser<CommandLineArguments, Bool>(
+            parse: { format in
+                let v = format.parts.contains(where: equalsOptionName(long: long, short: short)(template))
+                return (format, v || `default`)
+        },
+            print: { $0 ? CommandLineArguments(parts: ["\(template.longOption(long))"]) : .empty },
+            template: { $0 ? CommandLineArguments(parts: ["\(template.longOption(long))"]) : .empty }
+        )
+    }
 }
 
 public func option(
@@ -365,9 +525,19 @@ public func option(
     description: String
 ) -> CLI<Bool> {
     return CLI<Bool>(
-        parser: option(long: long, short: short, default: `default`),
-        usage: optionHelp(name: long, short: short, description: description),
-        example: [true]
+        parser: option(
+            long: long,
+            short: short,
+            default: `default`
+        ),
+        usage: optionHelp(
+            name: long,
+            short: short,
+            default: `default`,
+            description: description
+        ),
+        example: [true],
+        template: cliTemplate
     )
 }
 

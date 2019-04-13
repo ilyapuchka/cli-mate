@@ -3,5 +3,6 @@
     <pages>
         <page name='Commands Enum'/>
         <page name='Commands Struct'/>
+        <page name='Template'/>
     </pages>
 </playground>

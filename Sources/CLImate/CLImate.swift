@@ -580,7 +580,10 @@ private func varArg<A>(
     return { template in
         return Parser<CommandLineArguments, [A]>(
             parse: { format in
-                guard !format.parts.isEmpty,
+                if format.parts.isEmpty {
+                    return ([], [])
+                }
+                guard
                     let v = try f.apply(format.parts.joined(separator: " "))
                     else { return nil }
                 return ([], v)

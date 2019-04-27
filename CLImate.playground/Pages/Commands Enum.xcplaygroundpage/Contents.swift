@@ -6,7 +6,7 @@ import Prelude
 let name = "playground"
 let year = 2019
 
-let args = [
+let arguments = [
     "hello", "--name", name, "--year", "\(year)", "--verbose"
     ]
 
@@ -70,32 +70,49 @@ let commands: CLI<Commands> = [
             description: "name of the lane",
             example: "test_babylon"
         )
-        -- varArg(
+        -- arg(
             description: "lane options",
             example: ["branch:develop"]
-        )
+        ),
+//    Commands.fastlane
+//        <¢> command(
+//            name: "/fastlane",
+//            description: "run lane"
+//        )
+//        -- arg(
+//            name: "lane",
+//            description: "name of the lane",
+//            example: "test_babylon"
+//        )
+//        -- arg(
+//            name: "options",
+//            description: "lane options",
+//            example: ["branch:develop", "device:iPhone5s"]
+//    )
 ]
 
 do {
     print(commands.help())
 
-    try commands.match(args)
+    try commands.match(arguments)
 
-    var cmd = Commands.hello(name: name, year: year, verbose: true)
+    let cmd = Commands.hello(name: name, year: year, verbose: true)
 
     try commands.print(cmd)!.render()
     try commands.print(cmd).flatMap(commands.match)
     try commands.template(for: cmd)!.render()
 
-    try commands.run(args) { (cmd) in
+    try commands.run(arguments) { (cmd) in
         print(cmd)
     }
 
-    try commands.run(["help", "--help"]) { _ in }
-
-    try commands.run(["/fastlane", "test", "branch:develop", "device:iPhone5"]) { (cmd) in
+    try commands.run(["/fastlane", "test", "branch:develop", "device:iPhone5s"]) { (cmd) in
         print(cmd)
     }
+
+//    try commands.run(["/fastlane", "--options", "branch:develop", "--lane", "test", "--options", "device:iPhone5s"]) { (cmd) in
+//        print(cmd)
+//    }
 
 } catch {
     print(error)

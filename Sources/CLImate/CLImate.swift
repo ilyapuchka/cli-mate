@@ -76,10 +76,10 @@ public struct CLI<A>: FormatType {
     public func help(_ args: [String] = []) -> String {
         let usages: [String] = example
             .compactMap {
-                guard let example = try? self.parser.print($0), let ex = example else { return nil }
-                guard args.isEmpty || args.first(where: { ex.parts.contains($0) == false }) == nil else { return nil }
+                guard let example = try? self.parser.print($0) else { return nil }
+                guard args.isEmpty || args.first(where: { example.parts.contains($0) == false }) == nil else { return nil }
 
-                return template.commandUsage(usage($0), ex.render())
+                return template.commandUsage(usage($0), example.render())
         }
 
         if usages.isEmpty {
@@ -403,7 +403,7 @@ func arg<A>(
             parse: { format in
                 if let long = long {
                     guard
-                        let p = format.parts.index(where: equalsArgName(long: long, short: short)(template)),
+                        let p = format.parts.firstIndex(where: equalsArgName(long: long, short: short)(template)),
                         p < format.parts.endIndex,
                         let v = try f.apply(format.parts[format.parts.index(after: p)])
                         else { return nil }
@@ -485,7 +485,7 @@ func arg<A>(
             parse: { format in
                 if let long = long {
                     guard
-                        let p = format.parts.index(where: equalsArgName(long: long, short: short)(template)),
+                        let p = format.parts.firstIndex(where: equalsArgName(long: long, short: short)(template)),
                         p < format.parts.endIndex,
                         let v = try f.apply(format.parts[format.parts.index(after: p)])
                         else { return (format, nil) }
@@ -643,7 +643,7 @@ func option(
         return Parser<CommandLineArguments, Bool>(
             parse: { format in
                 guard
-                    let p = format.parts.index(where: equalsArgName(long: long, short: short)(template))
+                    let p = format.parts.firstIndex(where: equalsArgName(long: long, short: short)(template))
                     else {
                         return (format, `default`)
                 }

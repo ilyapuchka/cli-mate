@@ -1,7 +1,8 @@
 import XCTest
 
-import cli_mateTests
+import CLImateTests
 
 var tests = [XCTestCaseEntry]()
-tests += cli_mateTests.allTests()
+tests += CLImateTests.__allTests()
+
 XCTMain(tests)

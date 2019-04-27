@@ -71,12 +71,14 @@ let helloCommand = iso(Commands.Command.hello)
         description: "greeting"
     )
     -- arg(
-        name: "name", short: "n", example: "playground",
-        description: "a name"
+        name: "name", short: "n",
+        description: "a name",
+        example: "playground"
     )
     -- arg(
-        name: "year", short: "y", example: 2019,
-        description: "a year"
+        name: "year", short: "y",
+        description: "a year",
+        example: 2019
 )
 
 let printCommand = iso(Commands.Command.print)

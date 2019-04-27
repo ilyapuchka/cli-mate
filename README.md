@@ -14,8 +14,9 @@ let commands: CLI<Commands> = [
             description: "greeting command"
         )
         -- arg(
-            name: "name", short: "n", example: "world",
-            description: "a name"
+            name: "name", short: "n",
+            description: "a name",
+            example: "world"
         )
         -- option(
             name: "verbose", default: false,

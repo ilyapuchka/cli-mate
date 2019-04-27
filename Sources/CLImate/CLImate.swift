@@ -440,8 +440,8 @@ public func arg<A>(
     name long: String? = nil,
     short: String? = nil,
     _ f: PartialIso<String, A>,
-    example: A,
-    description: String
+    description: String,
+    example: A
 ) -> CLI<A> {
     return CLI<A>(
         parser: arg(
@@ -463,15 +463,15 @@ public func arg<A>(
 public func arg<A: LosslessStringConvertible>(
     name long: String? = nil,
     short: String? = nil,
-    example: A,
-    description: String
+    description: String,
+    example: A
 ) -> CLI<A> {
     return arg(
         name: long,
         short: short,
         .losslessStringConvertible,
-        example: example,
-        description: description
+        description: description,
+        example: example
     )
 }
 
@@ -524,8 +524,8 @@ public func arg<A>(
     name long: String? = nil,
     short: String? = nil,
     _ f: PartialIso<String?, A?>,
-    example: A,
-    description: String
+    description: String,
+    example: A
 ) -> CLI<A?> {
     return CLI<A?>(
         parser: arg(
@@ -547,15 +547,15 @@ public func arg<A>(
 public func arg<A: LosslessStringConvertible>(
     name long: String? = nil,
     short: String? = nil,
-    example: A,
-    description: String
+    description: String,
+    example: A
 ) -> CLI<A?> {
     return arg(
         name: long,
         short: short,
         opt(.losslessStringConvertible),
-        example: example,
-        description: description
+        description: description,
+        example: example
     )
 }
 
@@ -607,8 +607,8 @@ private func varArg<A>(
 
 public func varArg<A>(
     _ f: PartialIso<String, A>,
-    example: [A],
-    description: String
+    description: String,
+    example: [A]
 ) -> CLI<[A]> {
     return CLI<[A]>(
         parser: varArg(array(f)),
@@ -624,13 +624,13 @@ public func varArg<A>(
 }
 
 public func varArg<A: LosslessStringConvertible>(
-    example: [A],
-    description: String
+    description: String,
+    example: [A]
 ) -> CLI<[A]> {
     return varArg(
         .losslessStringConvertible,
-        example: example,
-        description: description
+        description: description,
+        example: example
     )
 }
 

@@ -39,12 +39,14 @@ let commands: CLI<Commands> = [
             description: "greeting"
         )
         -- arg(
-            name: "name", short: "n", example: "playground",
-            description: "a name"
+            name: "name", short: "n",
+            description: "a name",
+            example: "playground"
         )
         -- arg(
-            name: "year", short: "y", example: 2019,
-            description: "a year"
+            name: "year", short: "y",
+            description: "a year",
+            example: 2019
         )
         -- option(
             name: "verbose", default: false,
@@ -65,12 +67,12 @@ let commands: CLI<Commands> = [
             description: "run lane"
         )
         -- arg(
-            example: "test_babylon",
-            description: "name of the lane"
+            description: "name of the lane",
+            example: "test_babylon"
         )
         -- varArg(
-            example: ["branch:develop"],
-            description: "lane options"
+            description: "lane options",
+            example: ["branch:develop"]
         )
 ]
 

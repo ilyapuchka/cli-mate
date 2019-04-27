@@ -363,7 +363,7 @@ private func argHelp<A>(
     return { template in
         return { example in
             guard let _ = try? f.unapply(example) else { return "" }
-            return template.argHelp(long, short, "\(A.self)... ", description)
+            return template.argHelp(long, short, "[\(A.self)]", description)
         }
     }
 }

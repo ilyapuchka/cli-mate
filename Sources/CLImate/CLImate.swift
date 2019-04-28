@@ -249,9 +249,7 @@ public struct CLITemplate {
     public static let defaultCommandUsage: CommandUsage = { usage, example in
         "\(usage)\n\nExample:\n  \(example)"
     }
-    public static let defaultCLIUsage: (_ usage: String) -> String = { usage in
-        "Usage:\n\n\(usage)"
-    }
+    public static let defaultCLIUsage: (_ usage: String) -> String = { $0 }
 
     public typealias Arg = (String) -> String
     public typealias ArgHelp = (

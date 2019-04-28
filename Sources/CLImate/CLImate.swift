@@ -91,9 +91,9 @@ public struct CLI<A>: FormatType {
     }
 
     public func run(_ args: [String] = CommandLine.arguments, _ perform: (A) -> Void) throws -> Void {
-        let isHelp = equalsOptionName(long: "help", short: nil)(template)
+        let isHelp = equalsOptionName(long: "help", short: nil)
 
-        if args.last.flatMap(isHelp) == true {
+        if args.last.flatMap(isHelp(template)) == true {
             Swift.print(help(Array(args.dropLast())))
         } else if let matched = try match(args) {
             perform(matched)
@@ -243,8 +243,8 @@ public struct CLITemplate {
             return "  - \(type): \(description)"
         }
     }
-    public static let defaultOptionHelp: OptionHelp = { long, short, `default`, description in
-        "  --\(long)\(short.map { " (-\($0))" } ?? ""): \(description) (default: \(`default`))"
+    public static let defaultOptionHelp: OptionHelp = { long, short, description in
+        "  --\(long)\(short.map { " (-\($0))" } ?? ""): \(description)"
     }
     public static let defaultCommandUsage: CommandUsage = { usage, example in
         "\(usage)\n\nExample:\n  \(example)"
@@ -265,7 +265,6 @@ public struct CLITemplate {
     public typealias OptionHelp = (
         _ long: String,
         _ short: String?,
-        _ `default`: String,
         _ description: String
     ) -> String
 
@@ -350,7 +349,7 @@ private func argHelp<A>(
     return { template in
         return { example in
             guard let example = example, let _ = try? f.unapply(example) else { return "" }
-            return template.argHelp(long, short, "\(A.self)", description)
+            return template.argHelp(long, short, "\(A.self)", "\(description) (optional)")
         }
     }
 }
@@ -383,13 +382,12 @@ private func equalsOptionName(
 private func optionHelp(
     name long: String,
     short: String?,
-    default: Bool,
     description: String
 ) -> (CLITemplate) -> (Bool) -> String {
     return { template in
         return {
             guard $0 else { return "" }
-            return template.optionHelp(long, short, "\(`default`)", description)
+            return template.optionHelp(long, short, description)
         }
     }
 }
@@ -670,8 +668,7 @@ public func arg<A: LosslessStringConvertible>(
 
 func option(
     long: String,
-    short: String?,
-    default: Bool
+    short: String?
 ) -> (CLITemplate) -> Parser<CommandLineArguments, Bool> {
     return { template in
         return Parser<CommandLineArguments, Bool>(
@@ -679,7 +676,7 @@ func option(
                 guard
                     let p = format.parts.firstIndex(where: equalsArgName(long: long, short: short)(template))
                     else {
-                        return (format, `default`)
+                        return (format, false)
                 }
                 var parts = format.parts
                 parts.remove(at: p)
@@ -694,12 +691,11 @@ func option(
 public func option(
     name long: String,
     short: String? = nil,
-    default: Bool = false,
     description: String
 ) -> CLI<Bool> {
     return CLI<Bool>(
-        parser: option(long: long, short: short, default: `default`),
-        usage: optionHelp(name: long, short: short, default: `default`, description: description),
+        parser: option(long: long, short: short),
+        usage: optionHelp(name: long, short: short, description: description),
         examples: [true],
         template: cliTemplate
     )

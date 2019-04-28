@@ -3,10 +3,27 @@
 Define CLI commands using [CommonParsers](https://github.com/ilyapuchka/common-parsers).
 
 ```swift
+import CLImate
+import CommonParsers
+import Prelude
+
+// Define commands type
 enum Commands {
     case hello(name: String, verbose: Bool)
 }
 
+// Implement a helper protocol
+extension Commands: Matchable {
+    func match<A>(_ constructor: (A) -> Commands) -> A? {
+        switch self {
+        case let .hello(values):
+            guard let a = values as? A, self == constructor(a) else { return nil }
+            return a
+        }
+    }
+}
+
+// Define commands and their arguments
 let commands: CLI<Commands> = [
     Commands.hello
         <¢> command(
@@ -24,7 +41,7 @@ let commands: CLI<Commands> = [
         ),
 ]
 
-
+// Run a command
 let args = ["hello", "--name", "world", "--verbose"]
 
 try commands.run(args) { cmd in

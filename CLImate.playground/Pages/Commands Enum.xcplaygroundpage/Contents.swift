@@ -49,7 +49,7 @@ let commands: CLI<Commands> = [
             example: 2019
         )
         -- option(
-            name: "verbose", default: false,
+            name: "verbose",
             description: "be verbose"
     ),
     Commands.print
@@ -58,7 +58,7 @@ let commands: CLI<Commands> = [
             description: "printing"
         )
         -- option(
-            name: "verbose", short: "v", default: false,
+            name: "verbose", short: "v",
             description: "be verbose"
     ),
     Commands.fastlane

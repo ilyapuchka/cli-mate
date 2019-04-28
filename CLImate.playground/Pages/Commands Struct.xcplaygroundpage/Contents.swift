@@ -105,7 +105,7 @@ let commands: CLI<Commands> = [
             subCommands: subCommands
         )
         -- option(
-            name: "verbose", default: false,
+            name: "verbose",
             description: "be verbose"
     ),
     iso(Commands.init)

@@ -71,6 +71,7 @@ let commands: CLI<Commands> = [
             example: "test_babylon"
         )
         -- arg(
+            default: ["branch:develop"],
             description: "lane options",
             example: ["branch:develop"]
         ),
@@ -106,7 +107,7 @@ do {
         print(cmd)
     }
 
-    try commands.run(["/fastlane", "test", "branch:develop", "device:iPhone5s"]) { (cmd) in
+    try commands.run(["/fastlane", "test"]) { (cmd) in
         print(cmd)
     }
 

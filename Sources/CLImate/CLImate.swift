@@ -395,7 +395,8 @@ private func optionHelp(
 func arg<A>(
     long: String?,
     short: String?,
-    _ f: PartialIso<String, A>
+    _ f: PartialIso<String, A>,
+    `default`: A?
 ) -> (CLITemplate) -> Parser<CommandLineArguments, A> {
     return { template in
         return Parser<CommandLineArguments, A>(
@@ -405,7 +406,9 @@ func arg<A>(
                         let p = format.parts.firstIndex(where: equalsArgName(long: long, short: short)(template)),
                         p < format.parts.endIndex,
                         let v = try f.apply(format.parts[format.parts.index(after: p)])
-                        else { return nil }
+                        else {
+                            return `default`.map { (CommandLineArguments(parts: format.parts), $0) }
+                    }
 
                     var parts = format.parts
                     parts.remove(at: p)
@@ -439,11 +442,12 @@ public func arg<A>(
     name long: String? = nil,
     short: String? = nil,
     _ f: PartialIso<String, A>,
+    default: A? = nil,
     description: String,
     example: A
 ) -> CLI<A> {
     return CLI<A>(
-        parser: arg(long: long, short: short, f),
+        parser: arg(long: long, short: short, f, default: `default`),
         usage: argHelp(long: long, short: short, description: description, f),
         examples: [example],
         template: cliTemplate
@@ -453,6 +457,7 @@ public func arg<A>(
 public func arg<A: LosslessStringConvertible>(
     name long: String? = nil,
     short: String? = nil,
+    default: A? = nil,
     description: String,
     example: A
 ) -> CLI<A> {
@@ -460,6 +465,7 @@ public func arg<A: LosslessStringConvertible>(
         name: long,
         short: short,
         .losslessStringConvertible,
+        default: `default`,
         description: description,
         example: example
     )
@@ -553,7 +559,8 @@ extension PartialIso where A == [String] {
 private func arg<A>(
     name long: String,
     short: String?,
-    _ f: PartialIso<String, A>
+    _ f: PartialIso<String, A>,
+    default: [A]?
 ) -> (CLITemplate) -> Parser<CommandLineArguments, [A]> {
     return { template in
         return Parser<CommandLineArguments, [A]>.init(
@@ -561,12 +568,14 @@ private func arg<A>(
                 guard !format.parts.isEmpty else { return nil }
                 var format = format
                 var result = [A]()
-                let p = arg(long: long, short: short, f)(template)
-                while let (rest, match) = try p.parse(format) {
+                let parser = arg(long: long, short: short, f, default: nil)
+                while let (rest, match) = try parser(template).parse(format) {
                     result.append(match)
                     format = rest
                 }
-                guard !result.isEmpty else { return nil }
+                guard !result.isEmpty else {
+                    return `default`.map { (CommandLineArguments(parts: format.parts), $0) }
+                }
                 return (format, result)
         },
             print: { (array) -> CommandLineArguments? in
@@ -584,11 +593,12 @@ public func arg<A>(
     name long: String,
     short: String? = nil,
     _ f: PartialIso<String, A>,
+    default: [A]? = nil,
     description: String,
     example: [A]
 ) -> CLI<[A]> {
     return CLI<[A]>(
-        parser: arg(name: long, short: short, f),
+        parser: arg(name: long, short: short, f, default: `default`),
         usage: argHelp(long: long, short: short, description: description, PartialIso.array(f)),
         examples: [example],
         template: cliTemplate
@@ -598,29 +608,30 @@ public func arg<A>(
 public func arg<A: LosslessStringConvertible>(
     name long: String,
     short: String? = nil,
+    default: [A]? = nil,
     description: String,
     example: [A]
 ) -> CLI<[A]> {
     return CLI<[A]>(
-        parser: arg(name: long, short: short, .losslessStringConvertible),
+        parser: arg(name: long, short: short, .losslessStringConvertible, default: `default`),
         usage: argHelp(long: long, short: short, description: description, PartialIso.array(.losslessStringConvertible)),
         examples: [example],
         template: cliTemplate
     )
 }
 
-
 private func varArg<A>(
-    _ f: PartialIso<[String], [A]>
+    _ f: PartialIso<[String], [A]>,
+    `default`: [A]?
 ) -> (CLITemplate) -> Parser<CommandLineArguments, [A]> {
     return { template in
         return Parser<CommandLineArguments, [A]>(
             parse: { format in
                 if format.parts.isEmpty {
-                    return ([], [])
+                    return ([], `default` ?? [])
                 }
                 guard
-                    let v = try f.apply(format.parts)
+                    let v = try f.apply(format.parts) ?? `default`
                     else { return nil }
                 return ([], v)
         },
@@ -643,12 +654,13 @@ private func varArg<A>(
 
 public func arg<A>(
     _ f: PartialIso<String, A>,
+    default: [A]? = nil,
     description: String,
     example: [A]
 ) -> CLI<[A]> {
     let array = PartialIso.array(f)
     return CLI<[A]>(
-        parser: varArg(array),
+        parser: varArg(array, default: `default`),
         usage: argHelp(long: nil, short: nil, description: description, array),
         examples: [example],
         template: cliTemplate
@@ -656,11 +668,13 @@ public func arg<A>(
 }
 
 public func arg<A: LosslessStringConvertible>(
+    default: [A]? = nil,
     description: String,
     example: [A]
 ) -> CLI<[A]> {
     return arg(
         .losslessStringConvertible,
+        default: `default`,
         description: description,
         example: example
     )

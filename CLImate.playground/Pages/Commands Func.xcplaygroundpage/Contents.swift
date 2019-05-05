@@ -23,7 +23,7 @@ func bye(name: String, year: Int?, verbose: Bool) -> Command {
 }
 
 func print(verbose: Bool) -> Command {
-    return Command() {
+    return Command(args: verbose) {
         print("Hello!")
     }
 }

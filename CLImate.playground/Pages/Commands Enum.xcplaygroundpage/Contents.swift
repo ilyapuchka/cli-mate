@@ -32,8 +32,22 @@ extension Commands: Matchable {
     }
 }
 
+extension Commands {
+    enum iso {
+        static let hello = parenthesize(
+            PartialIso<(String, Int?, Bool), Commands>(
+                apply: Commands.hello,
+                unapply: {
+                    guard case let .hello(name, year, verbose) = $0 else { return nil }
+                    return (name, year, verbose)
+            }
+            )
+        )
+    }
+}
+
 let commands: CLI<Commands> = [
-    Commands.hello
+    Commands.iso.hello
         <¢> command(
             name: "hello",
             description: "greeting"

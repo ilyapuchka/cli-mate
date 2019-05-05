@@ -29,7 +29,7 @@ Note that arguments passed to the `Command.init` are grouped in a tuple and also
 You can already use this function to create and run a command:
 
 ```swift
-hello(name: "World", verbose: fale).run()
+hello(name: "World", verbose: false).run()
 // Hello, World!
 ```
 

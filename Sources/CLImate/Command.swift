@@ -12,7 +12,6 @@ public struct Command {
         self.args = args
         self.run = run
     }
-
 }
 
 extension CLI where A == Command {
@@ -99,119 +98,38 @@ extension Command {
     }
 
     public static func make<A, B>(_ f: @escaping (A, B) -> Command) -> PartialIso<(A, B), Command> {
-        return parenthesize(
-            PartialIso(
-                apply: f,
-                unapply: {
-                    let args = $0.args as? (A, B)
-                    guard $0.identifier == args.map(f)?.identifier else { return nil }
-                    return args
-                }
-            )
-        )
+        return make { f($0.0, $0.1) } |> parenthesize
     }
 
     public static func make<A, B, C>(_ f: @escaping (A, B, C) -> Command) -> PartialIso<(A, (B, C)), Command> {
-        return parenthesize(
-            PartialIso(
-                apply: f,
-                unapply: {
-                    let args = $0.args as? (A, B, C)
-                    guard $0.identifier == args.map(f)?.identifier else { return nil }
-                    return args
-                }
-            )
-        )
+        return make { f($0.0, $0.1, $0.2) } |> parenthesize
     }
 
     public static func make<A, B, C, D>(_ f: @escaping (A, B, C, D) -> Command) -> PartialIso<(A, (B, (C, D))), Command> {
-        return parenthesize(
-            PartialIso(
-                apply: f,
-                unapply: {
-                    let args = $0.args as? (A, B, C, D)
-                    guard $0.identifier == args.map(f)?.identifier else { return nil }
-                    return args
-                }
-            )
-        )
+        return make { f($0.0, $0.1, $0.2, $0.3) } |> parenthesize
     }
 
     public static func make<A, B, C, D, E>(_ f: @escaping (A, B, C, D, E) -> Command) -> PartialIso<(A, (B, (C, (D, E)))), Command> {
-        return parenthesize(
-            PartialIso(
-                apply: f,
-                unapply: {
-                    let args = $0.args as? (A, B, C, D, E)
-                    guard $0.identifier == args.map(f)?.identifier else { return nil }
-                    return args
-                }
-            )
-        )
+        return make { f($0.0, $0.1, $0.2, $0.3, $0.4) } |> parenthesize
     }
 
     public static func make<A, B, C, D, E, F>(_ f: @escaping (A, B, C, D, E, F) -> Command) -> PartialIso<(A, (B, (C, (D, (E, F))))), Command> {
-        return parenthesize(
-            PartialIso(
-                apply: f,
-                unapply: {
-                    let args = $0.args as? (A, B, C, D, E, F)
-                    guard $0.identifier == args.map(f)?.identifier else { return nil }
-                    return args
-                }
-            )
-        )
+        return make { f($0.0, $0.1, $0.2, $0.3, $0.4, $0.5) } |> parenthesize
     }
 
     public static func make<A, B, C, D, E, F, G>(_ f: @escaping (A, B, C, D, E, F, G) -> Command) -> PartialIso<(A, (B, (C, (D, (E, (F, G)))))), Command> {
-        return parenthesize(
-            PartialIso(
-                apply: f,
-                unapply: {
-                    let args = $0.args as? (A, B, C, D, E, F, G)
-                    guard $0.identifier == args.map(f)?.identifier else { return nil }
-                    return args
-                }
-            )
-        )
+        return make { f($0.0, $0.1, $0.2, $0.3, $0.4, $0.5, $0.6) } |> parenthesize
     }
 
     public static func make<A, B, C, D, E, F, G, H>(_ f: @escaping (A, B, C, D, E, F, G, H) -> Command) -> PartialIso<(A, (B, (C, (D, (E, (F, (G, H))))))), Command> {
-        return parenthesize(
-            PartialIso(
-                apply: f,
-                unapply: {
-                    let args = $0.args as? (A, B, C, D, E, F, G, H)
-                    guard $0.identifier == args.map(f)?.identifier else { return nil }
-                    return args
-                }
-            )
-        )
+        return make { f($0.0, $0.1, $0.2, $0.3, $0.4, $0.5, $0.6, $0.7) } |> parenthesize
     }
 
     public static func make<A, B, C, D, E, F, G, H, I>(_ f: @escaping (A, B, C, D, E, F, G, H, I) -> Command) -> PartialIso<(A, (B, (C, (D, (E, (F, (G, (H, I)))))))), Command> {
-        return parenthesize(
-            PartialIso(
-                apply: f,
-                unapply: {
-                    let args = $0.args as? (A, B, C, D, E, F, G, H, I)
-                    guard $0.identifier == args.map(f)?.identifier else { return nil }
-                    return args
-                }
-            )
-        )
+        return make { f($0.0, $0.1, $0.2, $0.3, $0.4, $0.5, $0.6, $0.7, $0.8) } |> parenthesize
     }
 
     public static func make<A, B, C, D, E, F, G, H, I, J>(_ f: @escaping (A, B, C, D, E, F, G, H, I, J) -> Command) -> PartialIso<(A, (B, (C, (D, (E, (F, (G, (H, (I, J))))))))), Command> {
-        return parenthesize(
-            PartialIso(
-                apply: f,
-                unapply: {
-                    let args = $0.args as? (A, B, C, D, E, F, G, H, I, J)
-                    guard $0.identifier == args.map(f)?.identifier else { return nil }
-                    return args
-                }
-            )
-        )
+        return make { f($0.0, $0.1, $0.2, $0.3, $0.4, $0.5, $0.6, $0.7, $0.8, $0.9) } |> parenthesize
     }
 }

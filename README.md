@@ -115,7 +115,7 @@ extension Commands: Matchable {
 
 If you choose not to implement this protocol you can define partial isomorphisms for each command manually:
 
-```
+```swift
 extension Commands {
     enum iso {
         static let hello = parenthesize(

@@ -48,7 +48,7 @@ public struct CLI<A>: FormatType {
                 guard let example = try? self.parser.print($0) else { return nil }
                 guard args.isEmpty || args.first(where: { example.parts.contains($0) == false }) == nil else { return nil }
 
-                return template.commandUsage(usage($0), example.render())
+                return template.commandUsageExample(usage($0), example.render())
         }
 
         guard !usages.isEmpty else {

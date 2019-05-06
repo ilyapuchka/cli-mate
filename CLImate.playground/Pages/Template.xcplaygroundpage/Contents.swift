@@ -6,19 +6,26 @@ import Prelude
 let name = "playground"
 let year = 2019
 
-let template = CLITemplate(
-    longArg: { "\($0):" },
-    shortArg: { "\($0):" },
-    argHelp: { (long, short, type, description) -> String in
-        return "  \(long ?? "")\(short.map { "(\($0))" } ?? ""): \(description) (\(type))"
-    },
-    longOption: { $0 },
-    shortOption: { $0 },
-    optionHelp: { (long, short, `default`, description) -> String in
-        return "  \(long)\(short.map { "(\($0))" } ?? ""): \(description) (default: \(`default`))"
-    },
-    cliUsage: { $0 }
-)
+class FastlaneTemplate: CLITemplate {
+    override func longName(_ name: String) -> String {
+        return "\(name):"
+    }
+    override func shortName(_ name: String) -> String {
+        return "\(name):"
+    }
+    override func longOption(_ name: String) -> String {
+        return name
+    }
+    override func shortOption(_ name: String) -> String {
+        return name
+    }
+    override func argUsage(_ long: String?, _ short: String?, _ type: String, _ description: String) -> String {
+        return "  \(long ?? "")\(short.map { " (\($0))" } ?? ""): \(description) (\(type))"
+    }
+    override func optionUsage(_ long: String, _ short: String?, _ description: String) -> String {
+        return "  \(long)\(short.map { " (\($0))" } ?? ""): \(description)"
+    }
+}
 
 let args = [
     "hello", "name:", name, "year:", "\(year)", "verbose"
@@ -42,7 +49,7 @@ extension Commands: Matchable {
     }
 }
 
-let commands = CLI<Commands>.with(template: template) {
+let commands = CLI<Commands>.with(template: FastlaneTemplate()) {
     [
         Commands.hello
             <¢> command(
@@ -50,15 +57,17 @@ let commands = CLI<Commands>.with(template: template) {
                 description: "greeting"
             )
             -- arg(
-                name: "name", short: "n", example: "playground",
-                description: "a name"
+                name: "name", short: "n",
+                description: "a name",
+                example: "playground"
             )
             -- arg(
-                name: "year", short: "y", example: 2019,
-                description: "a year"
+                name: "year", short: "y",
+                description: "a year",
+                example: 2019
             )
             -- option(
-                name: "verbose", default: false,
+                name: "verbose",
                 description: "be verbose"
         ),
         Commands.print
@@ -67,7 +76,7 @@ let commands = CLI<Commands>.with(template: template) {
                 description: "printing"
             )
             -- option(
-                name: "verbose", short: "v", default: false,
+                name: "verbose", short: "v",
                 description: "be verbose"
         )
     ]

@@ -38,15 +38,36 @@ private func command(
     )
 }
 
+private func commandUsage(
+    name str: String,
+    description: String
+) -> (CLITemplate) -> (Prelude.Unit) -> String {
+    return { template in
+        const(template.commandUsage(str, description))
+    }
+}
+
 public func command(
     name str: String,
     description: String
 ) -> CLI<Prelude.Unit> {
     return CLI<Prelude.Unit>(
-        parser: command(str),
-        usage: const("\(str): \(description)"),
-        examples: [unit]
+        parser: const(command(str)),
+        usage: commandUsage(name: str, description: description),
+        examples: [unit],
+        template: cliTemplate
     )
+}
+
+private func subCommandsUsage<A>(
+    name str: String,
+    subCommands: CLI<A>
+) -> (CLITemplate) -> (A) -> String {
+    return { template in
+        return { args in
+            template.commandUsage("\(str) \(subCommands.usage(args))", "")
+        }
+    }
 }
 
 public func command<A>(
@@ -55,9 +76,10 @@ public func command<A>(
 ) -> CLI<A> {
     let cmd = command(name: str, description: "")
     return CLI<A>(
-        parser: cmd.parser %> subCommands.parser,
-        usage: { "\(str) \(subCommands.usage($0))" },
-        examples: subCommands.examples
+        parser: const(cmd.parser %> subCommands.parser),
+        usage: subCommandsUsage(name: str, subCommands: subCommands),
+        examples: subCommands.examples,
+        template: cliTemplate
     )
 }
 

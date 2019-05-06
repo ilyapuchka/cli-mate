@@ -13,7 +13,7 @@ func equalsOptionName(
     }
 }
 
-private func optionHelp(
+private func optionUsage(
     name long: String,
     short: String?,
     description: String
@@ -21,7 +21,7 @@ private func optionHelp(
     return { template in
         return {
             guard $0 else { return "" }
-            return template.optionHelp(long, short, description)
+            return template.optionUsage(long, short, description)
         }
     }
 }
@@ -55,7 +55,7 @@ public func option(
 ) -> CLI<Bool> {
     return CLI<Bool>(
         parser: option(long: long, short: short),
-        usage: optionHelp(name: long, short: short, description: description),
+        usage: optionUsage(name: long, short: short, description: description),
         examples: [true],
         template: cliTemplate
     )

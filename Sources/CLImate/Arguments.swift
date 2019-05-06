@@ -5,43 +5,43 @@ import Prelude
 private func equalsArgName(
     long: String,
     short: String?
-    ) -> (CLITemplate) -> (String) -> Bool {
+) -> (CLITemplate) -> (String) -> Bool {
     return { template in
         return { name in
-            name == template.longArg(long) || (short.map { name == template.shortArg($0) } ?? false)
+            name == template.longName(long) || (short.map { name == template.shortName($0) } ?? false)
         }
     }
 }
 
-private func argHelp<A, B>(
+private func argUsage<A, B>(
     long: String?,
     short: String?,
     description: String,
     _ f: PartialIso<A, B>
-    ) -> (CLITemplate) -> (B) -> String {
+) -> (CLITemplate) -> (B) -> String {
     return { template in
         return { example in
             guard let _ = try? f.unapply(example) else { return "" }
-            return template.argHelp(long, short, "\(B.self)", description)
+            return template.argUsage(long, short, "\(B.self)", description)
         }
     }
 }
 
-private func argHelp<A>(
+private func argUsage<A>(
     long: String?,
     short: String?,
     description: String,
     _ f: PartialIso<String?, A?>
-    ) -> (CLITemplate) -> (A?) -> String {
+) -> (CLITemplate) -> (A?) -> String {
     return { template in
         return { example in
             guard let example = example, let _ = try? f.unapply(example) else { return "" }
-            return template.argHelp(long, short, "\(A.self)", "\(description) (optional)")
+            return template.argUsage(long, short, "\(A.self)", "\(description) (optional)")
         }
     }
 }
 
-private func argHelp<A, B>(
+private func argUsage<A, B>(
     long: String?,
     short: String?,
     description: String,
@@ -50,7 +50,7 @@ private func argHelp<A, B>(
     return { template in
         return { example in
             guard let _ = try? f.unapply(example) else { return "" }
-            return template.argHelp(long, short, "[\(B.self)]", description)
+            return template.argUsage(long, short, "[\(B.self)]", description)
         }
     }
 }
@@ -87,14 +87,14 @@ private func arg<A>(
             print: { a in
                 try f.unapply(a).flatMap { s in
                     CommandLineArguments(
-                        parts: [long.map { "\(template.longArg($0))" }, s].compactMap { $0 }
+                        parts: [long.map { "\(template.longName($0))" }, s].compactMap { $0 }
                     )
                 }
         },
             template: { a in
                 try f.unapply(a).flatMap { s in
                     CommandLineArguments(
-                        parts: [long.map { "\(template.longArg($0))" }, "\(type(of: a))"].compactMap { $0 }
+                        parts: [long.map { "\(template.longName($0))" }, "\(type(of: a))"].compactMap { $0 }
                     )
                 }
         })
@@ -111,7 +111,7 @@ public func arg<A>(
 ) -> CLI<A> {
     return CLI<A>(
         parser: arg(long: long, short: short, f, default: `default`),
-        usage: argHelp(long: long, short: short, description: description, f),
+        usage: argUsage(long: long, short: short, description: description, f),
         examples: [example],
         template: cliTemplate
     )
@@ -163,14 +163,14 @@ private func arg<A>(
             print: { a in
                 try f.unapply(a).flatMap { s in
                     CommandLineArguments(
-                        parts: [long.map { "\(template.longArg($0))" }, s].compactMap { $0 }
+                        parts: [long.map { "\(template.longName($0))" }, s].compactMap { $0 }
                     )
                     } ?? .empty
         },
             template: { a in
                 try f.unapply(a).flatMap { s in
                     CommandLineArguments(
-                        parts: [long.map { "\(template.longArg($0))" }, "\(type(of: a))"].compactMap { $0 }
+                        parts: [long.map { "\(template.longName($0))" }, "\(type(of: a))"].compactMap { $0 }
                     )
                     } ?? .empty
         })
@@ -186,7 +186,7 @@ public func arg<A>(
 ) -> CLI<A?> {
     return CLI<A?>(
         parser: arg(long: long, short: short, f),
-        usage: argHelp(long: long, short: short, description: description, f),
+        usage: argUsage(long: long, short: short, description: description, f),
         examples: [example],
         template: cliTemplate
     )
@@ -243,11 +243,11 @@ private func arg<A>(
         },
             print: { (array) -> CommandLineArguments? in
                 try CommandLineArguments(parts: array.compactMap(f.unapply).flatMap {
-                    ["\(template.longArg(long))", $0]
+                    ["\(template.longName(long))", $0]
                 })
         },
             template: { (array) -> CommandLineArguments? in
-                return CommandLineArguments(parts: [template.longArg(long), "\(A.self)..."])
+                return CommandLineArguments(parts: [template.longName(long), "\(A.self)..."])
         })
     }
 }
@@ -262,7 +262,7 @@ public func arg<A>(
 ) -> CLI<[A]> {
     return CLI<[A]>(
         parser: arg(name: long, short: short, f, default: `default`),
-        usage: argHelp(long: long, short: short, description: description, PartialIso.array(f)),
+        usage: argUsage(long: long, short: short, description: description, PartialIso.array(f)),
         examples: [example],
         template: cliTemplate
     )
@@ -277,7 +277,7 @@ public func arg<A: LosslessStringConvertible>(
 ) -> CLI<[A]> {
     return CLI<[A]>(
         parser: arg(name: long, short: short, .losslessStringConvertible, default: `default`),
-        usage: argHelp(long: long, short: short, description: description, PartialIso.array(.losslessStringConvertible)),
+        usage: argUsage(long: long, short: short, description: description, PartialIso.array(.losslessStringConvertible)),
         examples: [example],
         template: cliTemplate
     )
@@ -324,7 +324,7 @@ public func arg<A>(
     let array = PartialIso.array(f)
     return CLI<[A]>(
         parser: varArg(array, default: `default`),
-        usage: argHelp(long: nil, short: nil, description: description, array),
+        usage: argUsage(long: nil, short: nil, description: description, array),
         examples: [example],
         template: cliTemplate
     )

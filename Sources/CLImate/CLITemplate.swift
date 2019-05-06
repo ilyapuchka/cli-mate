@@ -14,72 +14,63 @@ extension CLI {
     }
 }
 
-public struct CLITemplate {
-    public static let defaultLongArg: Arg = { "--\($0)" }
-    public static let defaultShortArg: Arg = { "-\($0)" }
-    public static let defaultArgHelp: ArgHelp = { long, short, type, description in
-        if let long = long {
-            return "  \(defaultLongArg(long))\(short.map { " (\(defaultShortArg($0)))" } ?? "") \(type): \(description)"
-        } else if let short = short {
-            return "  \(defaultShortArg(short)) \(type): \(description)"
-        } else {
-            return "  - \(type): \(description)"
-        }
-    }
-    public static let defaultOptionHelp: OptionHelp = { long, short, description in
-        "  --\(long)\(short.map { " (-\($0))" } ?? ""): \(description)"
-    }
-    public static let defaultCommandUsage: CommandUsage = { usage, example in
-        "\(usage)\n\nExample:\n  \(example)"
-    }
-    public static let defaultCLIUsage: (_ usage: String) -> String = { $0 }
+open class CLITemplate {
+    public init() {}
 
-    public typealias Arg = (String) -> String
-    public typealias ArgHelp = (
+    open func longName(_ name: String) -> String {
+        return "--\(name)"
+    }
+
+    open func shortName(_ name: String) -> String {
+        return "-\(name)"
+    }
+
+    open func longOption(_ name: String) -> String {
+        return longName(name)
+    }
+
+    open func shortOption(_ name: String) -> String {
+        return shortName(name)
+    }
+
+    open func argUsage(
         _ long: String?,
         _ short: String?,
         _ type: String,
         _ description: String
-        ) -> String
+    ) -> String {
+        if let long = long {
+            return "  \(longName(long))\(short.map { " (\(shortName($0)))" } ?? "") \(type): \(description)"
+        } else if let short = short {
+            return "  \(shortName(short)) \(type): \(description)"
+        } else {
+            return "  - \(type): \(description)"
+        }
+    }
 
-    public typealias Option = (String) -> String
-    public typealias OptionHelp = (
+    open func optionUsage(
         _ long: String,
         _ short: String?,
         _ description: String
-        ) -> String
+    ) -> String {
+        return "  \(longName(long))\(short.map { " (\(shortName($0)))" } ?? ""): \(description)"
+    }
 
-    public typealias CommandUsage = (
+    open func commandUsage(
+        _ name: String,
+        _ description: String
+    ) -> String {
+        return "\(name)\(description.isEmpty ? "" : ": \(description)")"
+    }
+
+    open func commandUsageExample(
         _ usage: String,
         _ example: String
-        ) -> String
+    ) -> String {
+        return "\(usage)\n\nExample:\n  \(example)"
+    }
 
-    let longArg: Arg
-    let shortArg: Arg
-    let argHelp: ArgHelp
-    let longOption: Option
-    let shortOption: Option
-    let optionHelp: OptionHelp
-    let commandUsage: (String, String) -> String
-    let cliUsage: (String) -> String
-
-    public init(
-        longArg: @escaping Arg = CLITemplate.defaultLongArg,
-        shortArg: @escaping Arg = CLITemplate.defaultShortArg,
-        argHelp: @escaping ArgHelp = CLITemplate.defaultArgHelp,
-        longOption: @escaping Option = CLITemplate.defaultLongArg,
-        shortOption: @escaping Option = CLITemplate.defaultShortArg,
-        optionHelp: @escaping OptionHelp = CLITemplate.defaultOptionHelp,
-        commandUsage: @escaping CommandUsage = CLITemplate.defaultCommandUsage,
-        cliUsage: @escaping (String) -> String = CLITemplate.defaultCLIUsage
-        ) {
-        self.longArg = longArg
-        self.shortArg = shortArg
-        self.argHelp = argHelp
-        self.longOption = longOption
-        self.shortOption = shortOption
-        self.optionHelp = optionHelp
-        self.commandUsage = commandUsage
-        self.cliUsage = cliUsage
+    open func cliUsage(_ usage: String) -> String {
+        return usage
     }
 }

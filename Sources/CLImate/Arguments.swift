@@ -70,7 +70,9 @@ private func arg<A>(
                         p < format.parts.endIndex,
                         let v = try f.apply(format.parts[format.parts.index(after: p)])
                         else {
-                            return `default`.map { (CommandLineArguments(parts: format.parts), $0) }
+                            return try `default`
+                                .map { (CommandLineArguments(parts: format.parts), $0) }
+                                ?? { throw CLIError.missingArgument(name: long) }()
                     }
 
                     var parts = format.parts

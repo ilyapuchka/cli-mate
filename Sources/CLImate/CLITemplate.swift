@@ -2,17 +2,7 @@ import Foundation
 import CommonParsers
 import Prelude
 
-var cliTemplate: CLITemplate = CLITemplate()
-
-extension CLI {
-    public static func with(template: CLITemplate, _ define: () -> CLI) -> CLI {
-        cliTemplate = template
-        defer { cliTemplate = CLITemplate() }
-        var cli = define()
-        cli.template = template
-        return cli
-    }
-}
+var cliTemplate = CLITemplate()
 
 open class CLITemplate {
     public init() {}

@@ -2,6 +2,11 @@ import Foundation
 import CommonParsers
 import Prelude
 
+enum CLIError: Error {
+    case missingArgument(name: String)
+    case unknownCommand(name: String)
+}
+
 public struct CLI<A>: FormatType {
     public let usage: (A) -> String
     public let examples: [A]
@@ -71,9 +76,17 @@ public struct CLI<A>: FormatType {
 
 extension CLI: ExpressibleByArrayLiteral {
     public init(arrayLiteral elements: CLI...) {
-        self = elements.reduce(.empty, <|>)
+        self = elements.enumerated().reduce(.empty) { result, next in
+            if next.offset == elements.count - 1 {
+                return result <!> next.element
+            } else {
+                return result <|> next.element
+            }
+        }
     }
 }
+
+infix operator <!>
 
 func <|> <A, B>(_ f: @escaping (A) throws -> B?, _ g: @escaping (A) throws -> B?) -> (A) throws -> B? {
     return { a in
@@ -86,6 +99,32 @@ func <|> <A, B>(_ f: @escaping (A) throws -> B?, _ g: @escaping (A) throws -> B?
         return try b ?? g(a)
     }
 }
+
+extension Parser {
+    static func <|> (lhs: Parser, rhs: Parser) -> Parser {
+        return .init(
+            parse: { try lhs.parse($0) ?? rhs.parse($0) },
+            print: lhs.print <|> rhs.print,
+            template: lhs.template <|> rhs.template
+        )
+    }
+
+}
+
+extension Parser where T == CommandLineArguments {
+    static func <!> (lhs: Parser, rhs: Parser) -> Parser {
+        return .init(
+            parse: {
+                try lhs.parse($0) ?? rhs.parse($0)
+                    ?? { throw CLIError.unknownCommand(name: $0.parts.head()?.0 ?? "") }($0)
+            },
+            print: lhs.print <|> rhs.print,
+            template: lhs.template <|> rhs.template
+        )
+    }
+}
+
+infix operator --: infixr4
 
 extension CLI {
 
@@ -101,6 +140,26 @@ extension CLI {
 
         return CLI<A>(
             parser: lhs.parser <|> rhs.parser,
+            usage: { example in
+                let usage = usageForExample(lhs) <|> usageForExample(rhs)
+                return (try? usage(example) ?? "") ?? ""
+        },
+            examples: lhs.examples + rhs.examples
+        )
+    }
+
+    static func <!> (lhs: CLI, rhs: CLI) -> CLI {
+        func usageForExample(_ cli: CLI) -> (A) throws -> String? {
+            return { example in
+                guard try cli.parser.print(example) != nil else {
+                    return nil
+                }
+                return cli.usage(example)
+            }
+        }
+
+        return CLI<A>(
+            parser: lhs.parser <!> rhs.parser,
             usage: { example in
                 let usage = usageForExample(lhs) <|> usageForExample(rhs)
                 return (try? usage(example) ?? "") ?? ""
@@ -143,4 +202,18 @@ extension CLI {
     }
 }
 
-infix operator --: infixr4
+extension CLI {
+    public static func with(
+        template: CLITemplate = CLITemplate(),
+        _ define: () -> CLI
+    ) -> CLI {
+        cliTemplate = template
+        defer {
+            cliTemplate = CLITemplate()
+        }
+        var cli = define()
+        cli.template = template
+        return cli
+    }
+}
+

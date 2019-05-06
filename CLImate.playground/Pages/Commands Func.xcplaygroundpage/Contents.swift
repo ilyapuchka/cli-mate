@@ -91,7 +91,9 @@ let commands: CLI<Command> = [
 
 
 do {
-    print(commands.help())
+    try commands.run(["--help"]) {
+        $0.run()
+    }
 
     try commands.match(args)
 
@@ -102,10 +104,6 @@ do {
     try commands.template(for: cmd)!.render()
 
     try commands.run(args) {
-        $0.run()
-    }
-
-    try commands.run(["--help"]) {
         $0.run()
     }
 } catch {

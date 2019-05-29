@@ -41,8 +41,15 @@ extension Command {
         })
     }
 
-    public static func make<A, B>(_ f: @escaping (A, B) -> Command) -> PartialIso<(A, B), Command> {
-        return make { f($0.0, $0.1) } |> parenthesize
+    // note: extra parentheses are to resolve ambiguity with single parameter variant
+    public static func make<A, B>(_ f: @escaping ((A, B)) -> Command) -> PartialIso<(A, B), Command> {
+        return PartialIso(
+            apply: f,
+            unapply: {
+                let args = $0.args as? (A, B)
+                guard $0.identifier == args.map(f)?.identifier else { return nil }
+                return args
+        })
     }
 
     public static func make<A, B, C>(_ f: @escaping (A, B, C) -> Command) -> PartialIso<(A, (B, C)), Command> {

@@ -10,26 +10,10 @@ let arguments = [
     "hello", "--name", name, "--year", "\(year)", "--verbose"
     ]
 
-enum Commands {
+enum Commands: Matchable {
     case hello(name: String, year: Int?, verbose: Bool)
     case print(verbose: Bool)
     case fastlane(lane: String, options: [String])
-}
-
-extension Commands: Matchable {
-    func match<A>(_ constructor: (A) -> Commands) -> A? {
-        switch self {
-        case let .hello(values):
-            guard let a = values as? A, self == constructor(a) else { return nil }
-            return a
-        case let .print(values):
-            guard let a = values as? A, self == constructor(a) else { return nil }
-            return a
-        case let .fastlane(values):
-            guard let a = values as? A, self == constructor(a) else { return nil }
-            return a
-        }
-    }
 }
 
 extension Commands {

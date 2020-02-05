@@ -11,25 +11,25 @@ let args = [
 ]
 
 func hello(name: String, year: Int?, verbose: Bool) -> Command {
-    return Command(args: (name, year, verbose)) {
+    Command(args: (name, year, verbose)) { (name, year, verbose) in
         print("Hello \(name). Year is \(year ?? 0)")
     }
 }
 
 func bye(name: String, year: Int?, verbose: Bool) -> Command {
-    return Command(args: (name, year, verbose)) {
+    Command(args: (name, year, verbose)) { (name, year, verbose) in
         print("Bye \(name). Year is \(year ?? 0)")
     }
 }
 
 func print(verbose: Bool) -> Command {
-    return Command(args: verbose) {
+    Command(args: (name, year, verbose)) { (verbose) in
         print("Hello!")
     }
 }
 
 func exit() -> Command {
-    return Command(args: unit) {
+    Command {
         print("Exit!")
     }
 }

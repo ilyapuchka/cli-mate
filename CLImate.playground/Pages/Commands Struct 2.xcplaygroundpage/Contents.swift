@@ -14,7 +14,7 @@ protocol Command {
     func run()
 }
 
-func command<T, U: Command>(_ iso: PartialIso<T, U>) -> PartialIso<T, Command> {
+func commandISO<T, U: Command>(_ iso: PartialIso<T, U>) -> PartialIso<T, Command> {
     return PartialIso<T, Command>(
         apply: iso.apply,
         unapply: { try ($0 as? U).flatMap(iso.unapply) }
@@ -26,7 +26,7 @@ struct HelloCommand: Command {
     let year: Int?
     let verbose: Bool
 
-    static let iso = command(parenthesize(PartialIso(
+    static let iso = commandISO(parenthesize(PartialIso(
         apply: { HelloCommand(name: $0, year: $1, verbose: $2) },
         unapply: { ($0.name, $0.year, $0.verbose) }
     )))

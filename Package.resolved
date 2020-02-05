@@ -6,44 +6,17 @@
         "repositoryURL": "https://github.com/ilyapuchka/common-parsers.git",
         "state": {
           "branch": "master",
-          "revision": "32ae19987d03a4fbd7c20e48f44f1725ea277852",
+          "revision": "2386ef5d444746ad77a70296d878683ae0f9c9a2",
           "version": null
-        }
-      },
-      {
-        "package": "NonEmpty",
-        "repositoryURL": "https://github.com/pointfreeco/swift-nonempty.git",
-        "state": {
-          "branch": null,
-          "revision": "2051d80bcc1510f14508c942d64b5c6364ed1bdc",
-          "version": "0.2.0"
         }
       },
       {
         "package": "Prelude",
-        "repositoryURL": "https://github.com/ilyapuchka/swift-prelude.git",
+        "repositoryURL": "https://github.com/pointfreeco/swift-prelude.git",
         "state": {
-          "branch": "master",
-          "revision": "84c5734cb345904a73917404753dcc25cab8cca1",
+          "branch": null,
+          "revision": "9240a1f951c382e1c7387762c6cd94042baba531",
           "version": null
-        }
-      },
-      {
-        "package": "SnapshotTesting",
-        "repositoryURL": "https://github.com/pointfreeco/swift-snapshot-testing.git",
-        "state": {
-          "branch": null,
-          "revision": "883f0b0623ae55f41f42e2399dab428017896448",
-          "version": "1.5.0"
-        }
-      },
-      {
-        "package": "Tagged",
-        "repositoryURL": "https://github.com/pointfreeco/swift-tagged.git",
-        "state": {
-          "branch": null,
-          "revision": "890b791f3e28de6ded242fe02c2b8dfea1ee32b6",
-          "version": "0.4.0"
         }
       }
     ]

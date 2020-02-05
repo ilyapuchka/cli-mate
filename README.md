@@ -99,16 +99,15 @@ try app.run() { cmd in
 }
 ```
 
-This enum or struct type should implement `Matchable` protocol that framework will use to match commands with arguments.
+This enum or struct type should implement `Matchable` protocol that framework will use to match commands with arguments. For enums it's possible to use the default implementation provided by the library, so the only thing you would need to do is adding conformance to the `Matchable` protocol, but for structs you will need to implement it manually, which can look somehting like this:
 
 ```swift
-extension Commands: Matchable {
-    func match<A>(_ constructor: (A) -> Commands) -> A? {
-        switch self {
-        case let .hello(values):
-            guard let a = values as? A, self == constructor(a) else { return nil }
-            return a
+extension StructCommand: Matchable, Equatable {
+    func match<A>(_ constructor: (A) -> StructCommand) -> A? {
+        if let values = (self.param1, self.param2, self.param3) as? A, self == constructor(values) {
+            return values
         }
+        return nil
     }
 }
 ```
@@ -136,7 +135,7 @@ let app: CLI<Commands> = [
 ```
 
 As you can see both approaches require quite a lot of boilerplate (you can generate it using Sourcery or SwiftSyntax).
-If it's not crucial for your app to represent commands as standalone types you should use `Command`.
+If it's not crucial for your app to represent commands as standalone types you should define them as functions and use `Command`.
 
 See the playground for more examples of commands.
 

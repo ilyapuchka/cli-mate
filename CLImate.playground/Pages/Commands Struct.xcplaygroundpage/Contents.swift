@@ -10,8 +10,8 @@ let args = [
     "run", "hello", "--name", name, "--year", "\(year)", "--verbose"
 ]
 
-struct Commands: Equatable, CustomPlaygroundDisplayConvertible {
-    enum Command {
+struct Commands: CustomPlaygroundDisplayConvertible {
+    enum Command: Matchable, Equatable {
         case hello(name: String, year: Int?)
         case print
         case exit
@@ -37,22 +37,7 @@ struct Commands: Equatable, CustomPlaygroundDisplayConvertible {
     }
 }
 
-extension Commands.Command: Matchable {
-    func match<A>(_ constructor: (A) -> Commands.Command) -> A? {
-        switch self {
-        case let .hello(values as A) where self == constructor(values):
-            return values
-        case .print, .exit:
-            guard let values = unit as? A, self == constructor(values) else {
-                return nil
-            }
-            return values
-        default: return nil
-        }
-    }
-}
-
-extension Commands: Matchable {
+extension Commands: Equatable, Matchable {
     func match<A>(_ constructor: (A) -> Commands) -> A? {
         if let values = (self.command, self.verbose) as? A, self == constructor(values) {
             return values
@@ -131,7 +116,7 @@ do {
         print(cmd)
     }
 
-    try commands.run(["run", "--help"]) { _ in }
+    try commands.run(["run", "hello", "--help"]) { _ in }
 } catch {
     print(error)
 }

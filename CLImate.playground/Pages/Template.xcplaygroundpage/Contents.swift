@@ -31,22 +31,9 @@ let args = [
     "hello", "name:", name, "year:", "\(year)", "verbose"
 ]
 
-enum Commands {
+enum Commands: Matchable {
     case hello(name: String, year: Int?, verbose: Bool)
     case print(verbose: Bool)
-}
-
-extension Commands: Matchable {
-    func match<A>(_ constructor: (A) -> Commands) -> A? {
-        switch self {
-        case let .hello(values):
-            guard let a = values as? A, self == constructor(a) else { return nil }
-            return a
-        case let .print(values):
-            guard let a = values as? A, self == constructor(a) else { return nil }
-            return a
-        }
-    }
 }
 
 let commands = CLI<Commands>.with(template: FastlaneTemplate()) {

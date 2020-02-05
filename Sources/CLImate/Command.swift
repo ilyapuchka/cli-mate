@@ -7,10 +7,13 @@ public struct Command {
     let args: Any
     public let run: () -> Void
 
-    public init(identifier: String = #function, args: Any = unit, run: @escaping () -> Void) {
+    public init<A>(identifier: String = #function, args a: A, run: @escaping (A) -> Void) {
         self.identifier = identifier
-        self.args = args
-        self.run = run
+        self.args = a
+        self.run = { run(a) }
+    }
+    public init(identifier: String = #function, run: @escaping () -> Void) {
+        self.init(identifier: identifier, args: unit, run: { (_: Prelude.Unit) in run() })
     }
 }
 
